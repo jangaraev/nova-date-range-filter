@@ -82,6 +82,12 @@ export default {
         },
         firstDayOfWeek() {
             return this.filter.firstDayOfWeek || 0
+        },
+        defaultHour() {
+            return this.filter.mode === 'to' ? 23 : 0
+        },
+        defaultMinute() {
+            return this.filter.mode === 'to' ? 59 : 0
         }
     },
 
@@ -100,9 +106,19 @@ export default {
                 allowInput: true,
                 // static: true,
                 mode: this.modeType,
+                defaultHour: this.defaultHour,
+                defaultMinute: this.defaultMinute,
                 time_24hr: !this.twelveHourTime,
                 onReady() {
                     self.$refs.datePicker.parentNode.classList.add('date-filter')
+                },
+                onYearChange: (selectedDates, dateStr, instance) => {
+                    // Redraw calendar when year changes via the year input
+                    instance.redraw()
+                },
+                onMonthChange: (selectedDates, dateStr, instance) => {
+                    // Redraw calendar when month changes
+                    instance.redraw()
                 },
                 locale: {
                     rangeSeparator: ` ${this.separator} `,
@@ -115,6 +131,10 @@ export default {
     methods: {
         handleChange(value) {
             setTimeout(() => {
+                if (this.enableTime && this.modeType === 'range' && value.length === 2) {
+                    value[1].setHours(23, 59, 0, 0)
+                }
+
                 value = value.map(value => {
                     return flatpickr.formatDate(value, this.dateFormat)
                 })
